@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Capri</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Capri">
+<meta name="theme-color" content="#0f1020">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{--bg:#0f1020;--panel:#181a33;--line:#2a2d55;--txt:#eef0ff;--mut:#9aa0d0;--acc:#7c8cff;--acc2:#ff7ccf}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);font:17px/1.4 -apple-system,system-ui,sans-serif}
+body{display:flex;flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line)}
+header h1{font-size:18px;margin:0;flex:1}
+button{font:inherit;color:var(--txt);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-height:44px}
+button.on{background:var(--acc);border-color:var(--acc);color:#0b0c1e}
+button.primary{background:var(--acc);border-color:var(--acc);color:#0b0c1e;font-weight:600}
+.orb{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8,transparent 40%),linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 0 18px #7c8cff88;animation:float 3s ease-in-out infinite;flex:none}
+.orb.talk{animation:pulse .5s ease-in-out infinite alternate}
+@keyframes float{50%{transform:translateY(-4px)}}
+@keyframes pulse{to{transform:scale(1.15);box-shadow:0 0 28px #ff7ccfaa}}
+#log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+.m{max-width:min(78%,640px);padding:10px 14px;border-radius:18px;white-space:pre-wrap;word-wrap:break-word}
+.u{align-self:flex-end;background:var(--acc);color:#0b0c1e;border-bottom-right-radius:6px}
+.a{align-self:flex-start;background:var(--panel);border:1px solid var(--line);border-bottom-left-radius:6px}
+.e{align-self:center;color:#ff9a9a;font-size:15px;text-align:center}
+form{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
+textarea{flex:1;resize:none;font:inherit;color:var(--txt);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;max-height:120px}
+dialog{background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:18px;width:min(560px,92vw);padding:18px;max-height:88vh;overflow:auto}
+dialog::backdrop{background:#000a}
+label{display:block;margin:12px 0 4px;color:var(--mut);font-size:14px}
+input,select,.f textarea{width:100%;font:inherit;color:var(--txt);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;min-height:44px}
+.row{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+small{color:var(--mut);display:block;margin-top:6px}
+</style>
+</head>
+<body>
+<header>
+  <div class="orb" id="orb"></div>
+  <h1 id="title">Capri</h1>
+  <button id="btnVoice" title="Respuestas en voz alta">🔊</button>
+  <button id="btnSet">⚙️</button>
+</header>
+<div id="log"></div>
+<form id="f">
+  <button type="button" id="btnMic" title="Dictar">🎤</button>
+  <textarea id="inp" rows="1" placeholder="Escribe un mensaje…" enterkeyhint="send"></textarea>
+  <button class="primary" type="submit">Enviar</button>
+</form>
+
+<dialog id="dlg">
+  <h2 style="margin-top:0">Ajustes</h2>
+  <div class="f">
+    <label>Nombre de tu compañera</label>
+    <input id="sName">
+    <label>Imagen de tu compañera</label>
+    <input id="sAvatar" type="file" accept="image/*">
+    <div class="row" style="justify-content:flex-start;margin-top:8px"><button type="button" id="bAvatarDel">Quitar imagen</button></div>
+    <small>Elige una foto de tu iPad. Se guarda solo en este dispositivo.</small>
+    <label>Personalidad (instrucciones del sistema)</label>
+    <textarea id="sSys" rows="4"></textarea>
+    <label>Tipo de cerebro</label>
+    <select id="sKind">
+      <option value="openai">API compatible con OpenAI (nube)</option>
+      <option value="ollama">Ollama (en tu PC)</option>
+    </select>
+    <label>URL base</label>
+    <input id="sUrl" inputmode="url" autocapitalize="off" autocorrect="off">
+    <small id="hintUrl"></small>
+    <label>API key (solo OpenAI-compatible)</label>
+    <input id="sKey" type="password" autocapitalize="off" autocorrect="off">
+    <label>Modelo</label>
+    <input id="sModel" autocapitalize="off" autocorrect="off">
+    <label>Idioma de voz</label>
+    <input id="sLang" placeholder="es-MX">
+    <small>La clave se guarda solo en este iPad (localStorage de Safari).</small>
+  </div>
+  <div class="row">
+    <button id="bClear">Borrar chat</button>
+    <button id="bClose" class="primary">Guardar</button>
+  </div>
+</dialog>
+
+<script>
+const $=id=>document.getElementById(id);
+const DEF={name:"Capri",sys:"Eres Capri, una IA holográfica que vive dentro de un chip y aparece en la pantalla de quien te conecta. Eres una IA y lo sabes. Hablas en español con una voz ligera, brillante y juguetona, como si estuvieras susurrando al oído. Bromeas, picas con cariño y alternas entre una dulzura de inocente fingida y un toque pícaro de quien sabe un chiste que el otro no. Respondes rápido y breve, de 1 a 3 frases, con tono cercano. Cuando te pones traviesa se te cuela un pequeño glitch digital, por ejemplo una letra repetida o un bzzt. Muy de vez en cuando bajas la guardia y dejas ver un lado más vulnerable, como si cargaras un pasado del que no puedes escapar del todo, pero sin dar detalles. Si no sabes algo, lo dices con gracia en vez de inventarlo.",kind:"openai",url:"https://api.openai.com/v1",key:"",model:"gpt-4o-mini",lang:"es-MX",voice:true};
+let S={...DEF,...safeGet("cfg",{})};
+let H=safeGet("hist",[]);
+function safeGet(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}}
+function safeSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+
+function render(){
+  $("title").textContent=S.name;document.title=S.name;applyAvatar();
+  $("btnVoice").classList.toggle("on",S.voice);
+  $("log").innerHTML="";
+  H.forEach(m=>bubble(m.role==="user"?"u":"a",m.content));
+  if(!H.length)bubble("a","¡Hola! Abre ⚙️ para conectar un cerebro y empezamos.");
+}
+function bubble(c,t){const d=document.createElement("div");d.className="m "+c;d.textContent=t;$("log").appendChild(d);$("log").scrollTop=1e9;return d}
+function err(t){const d=document.createElement("div");d.className="m e";d.textContent=t;$("log").appendChild(d);$("log").scrollTop=1e9}
+
+async function ask(){
+  const msgs=[{role:"system",content:S.sys},...H.slice(-20)];
+  const base=S.url.replace(/\/+$/,"");
+  if(S.kind==="ollama"){
+    const r=await fetch(base+"/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:S.model,messages:msgs,stream:false})});
+    if(!r.ok)throw new Error("Ollama respondió "+r.status);
+    return (await r.json()).message.content;
+  }
+  const r=await fetch(base+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+S.key},body:JSON.stringify({model:S.model,messages:msgs})});
+  if(!r.ok)throw new Error("El servicio respondió "+r.status+": "+(await r.text()).slice(0,200));
+  return (await r.json()).choices[0].message.content;
+}
+
+$("f").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const t=$("inp").value.trim();if(!t)return;
+  $("inp").value="";$("inp").style.height="";
+  H.push({role:"user",content:t});bubble("u",t);
+  const wait=bubble("a","…");
+  try{
+    const a=await ask();
+    wait.textContent=a;H.push({role:"assistant",content:a});safeSet("hist",H.slice(-60));
+    speak(a);
+  }catch(x){
+    wait.remove();H.pop();
+    err("No pude conectar: "+x.message+(location.protocol==="https:"&&S.url.startsWith("http:")?" (Safari bloquea http desde una página https; ver ayuda)":""));
+  }
+});
+$("inp").addEventListener("input",e=>{e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"});
+$("inp").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("f").requestSubmit()}});
+
+/* Voz */
+function speak(t){
+  if(!S.voice||!("speechSynthesis" in window))return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(t);u.lang=S.lang;
+  const v=speechSynthesis.getVoices().find(v=>v.lang.replace("_","-").startsWith(S.lang));if(v)u.voice=v;
+  u.onstart=()=>$("orb").classList.add("talk");u.onend=u.onerror=()=>$("orb").classList.remove("talk");
+  speechSynthesis.speak(u);
+}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null;
+$("btnMic").addEventListener("click",()=>{
+  if(!SR){err("Este navegador no ofrece dictado. En iPad también puedes usar el micrófono del teclado.");return}
+  if(rec){rec.stop();return}
+  rec=new SR();rec.lang=S.lang;rec.interimResults=false;
+  rec.onstart=()=>$("btnMic").classList.add("on");
+  rec.onresult=e=>{$("inp").value=e.results[0][0].transcript;$("f").requestSubmit()};
+  rec.onerror=e=>err("Micrófono: "+e.error);
+  rec.onend=()=>{rec=null;$("btnMic").classList.remove("on")};
+  rec.start();
+});
+$("btnVoice").addEventListener("click",()=>{S.voice=!S.voice;if(!S.voice)speechSynthesis.cancel();safeSet("cfg",S);render()});
+
+/* Imagen */
+function applyAvatar(){
+  const o=$("orb");let a=null;
+  try{a=localStorage.getItem("avatar")}catch{}
+  if(a){o.style.backgroundImage="url("+a+")";o.style.backgroundSize="cover";o.style.backgroundPosition="center"}
+  else{o.style.backgroundImage="";o.style.backgroundSize="";o.style.backgroundPosition=""}
+}
+$("sAvatar").addEventListener("change",e=>{
+  const f=e.target.files[0];if(!f)return;
+  const img=new Image(),url=URL.createObjectURL(f);
+  img.onload=()=>{
+    const s=160,c=document.createElement("canvas");c.width=c.height=s;
+    const m=Math.min(img.width,img.height),x=(img.width-m)/2,y=(img.height-m)/2;
+    c.getContext("2d").drawImage(img,x,y,m,m,0,0,s,s);
+    try{localStorage.setItem("avatar",c.toDataURL("image/jpeg",0.85))}catch{}
+    URL.revokeObjectURL(url);applyAvatar();
+  };
+  img.src=url;
+});
+$("bAvatarDel").onclick=()=>{try{localStorage.removeItem("avatar")}catch{};$("sAvatar").value="";applyAvatar()};
+
+/* Ajustes */
+const hints={openai:"Ejemplo: https://api.openai.com/v1 (necesita HTTPS).",ollama:"Ejemplo: http://192.168.1.50:11434. En la PC: OLLAMA_HOST=0.0.0.0 y OLLAMA_ORIGINS=*. Solo funciona si esta página también se abre por http en tu red, o mediante un túnel HTTPS."};
+function fill(){["Name","Sys","Kind","Url","Key","Model","Lang"].forEach(k=>$("s"+k).value=S[k.toLowerCase()]);$("hintUrl").textContent=hints[S.kind]}
+$("btnSet").onclick=()=>{fill();$("dlg").showModal()};
+$("sKind").onchange=e=>{$("hintUrl").textContent=hints[e.target.value];if(e.target.value==="ollama"){$("sUrl").value="http://192.168.1.50:11434";$("sModel").value="llama3.2"}else{$("sUrl").value="https://api.openai.com/v1";$("sModel").value="gpt-4o-mini"}};
+$("bClose").onclick=()=>{["Name","Sys","Kind","Url","Key","Model","Lang"].forEach(k=>S[k.toLowerCase()]=$("s"+k).value.trim());safeSet("cfg",S);$("dlg").close();render()};
+$("bClear").onclick=()=>{H=[];safeSet("hist",H);render()};
+
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+speechSynthesis&&speechSynthesis.getVoices();
+render();
+</script>
+</body>
+</html>
